@@ -1,31 +1,32 @@
-import kv from "@/lib/kv";
-import { getNowMs } from "@/lib/time";
+import { redis } from "@/lib/redis";
 
 export default async function handler(req, res) {
   const { id } = req.query;
-  const paste = await kv.get(`paste:${id}`);
+
+  const paste = await redis.get(`paste:${id}`);
 
   if (!paste) {
-    return res.status(404).json({ error: "Not found" });
+    return res.status(404).json({ error: "Paste not found" });
   }
 
-  const now = getNowMs(req);
-
-  if (paste.expires_at && now >= paste.expires_at) {
-    return res.status(404).json({ error: "Expired" });
+  if (paste.expires_at && Date.now() > paste.expires_at) {
+    await redis.del(`paste:${id}`);
+    return res.status(404).json({ error: "Paste expired" });
   }
 
-  if (paste.max_views !== null && paste.views >= paste.max_views) {
-    return res.status(404).json({ error: "View limit exceeded" });
-  }
+  if (paste.remaining_views !== null) {
+    if (paste.remaining_views <= 0) {
+      await redis.del(`paste:${id}`);
+      return res.status(404).json({ error: "View limit exceeded" });
+    }
 
-  paste.views += 1;
-  await kv.set(`paste:${id}`, paste);
+    paste.remaining_views -= 1;
+    await redis.set(`paste:${id}`, paste);
+  }
 
   res.status(200).json({
     content: paste.content,
-    remaining_views:
-      paste.max_views === null ? null : Math.max(paste.max_views - paste.views, 0),
-    expires_at: paste.expires_at ? new Date(paste.expires_at).toISOString() : null,
+    remaining_views: paste.remaining_views,
+    expires_at: paste.expires_at,
   });
 }

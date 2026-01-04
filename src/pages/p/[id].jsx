@@ -1,30 +1,30 @@
-import { useEffect, useState } from "react";
 import { useRouter } from "next/router";
+import { useEffect, useState } from "react";
 
 export default function PastePage() {
   const router = useRouter();
   const { id } = router.query;
-  const [data, setData] = useState(null);
+
+  const [paste, setPaste] = useState(null);
   const [error, setError] = useState("");
 
   useEffect(() => {
     if (!id) return;
 
     fetch(`/api/pastes/${id}`)
-      .then(async (res) => {
-        if (!res.ok) throw new Error();
-        return res.json();
-      })
-      .then(setData)
-      .catch(() => setError("Paste not found or expired"));
+      .then((res) => res.json())
+      .then((data) => {
+        if (data.error) setError(data.error);
+        else setPaste(data);
+      });
   }, [id]);
 
-  if (error) return <h1>404 - {error}</h1>;
-  if (!data) return <p>Loading...</p>;
+  if (error) return <h2>{error}</h2>;
+  if (!paste) return <p>Loading...</p>;
 
   return (
-    <pre style={{ padding: 20, whiteSpace: "pre-wrap" }}>
-      {data.content}
+    <pre style={{ whiteSpace: "pre-wrap" }}>
+      {paste.content}
     </pre>
   );
 }
