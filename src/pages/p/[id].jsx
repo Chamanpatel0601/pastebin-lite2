@@ -1,5 +1,6 @@
 import { useRouter } from "next/router";
 import { useEffect, useState } from "react";
+//import "../styles.css";
 
 export default function PastePage() {
   const router = useRouter();
@@ -19,12 +20,24 @@ export default function PastePage() {
       });
   }, [id]);
 
-  if (error) return <h2>{error}</h2>;
+  if (error) return <h2 className="error">{error}</h2>;
   if (!paste) return <p>Loading...</p>;
 
   return (
-    <pre style={{ whiteSpace: "pre-wrap" }}>
-      {paste.content}
-    </pre>
+    <div className="container">
+      <h2>Your Paste</h2>
+      <pre>{paste.content}</pre>
+
+      <div className="meta">
+        {paste.remaining_views !== null && (
+          <span>Views Left: {paste.remaining_views}</span>
+        )}
+        {paste.expires_at && (
+          <span>
+            Expires At: {new Date(paste.expires_at).toLocaleString()}
+          </span>
+        )}
+      </div>
+    </div>
   );
 }

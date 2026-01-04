@@ -6,14 +6,16 @@ export default async function handler(req, res) {
   const paste = await redis.get(`paste:${id}`);
 
   if (!paste) {
-    return res.status(404).json({ error: "Paste not found" });
+    return res.status(404).json({ error: "Paste not found or expired" });
   }
 
+  // TTL check
   if (paste.expires_at && Date.now() > paste.expires_at) {
     await redis.del(`paste:${id}`);
     return res.status(404).json({ error: "Paste expired" });
   }
 
+  // View count check
   if (paste.remaining_views !== null) {
     if (paste.remaining_views <= 0) {
       await redis.del(`paste:${id}`);
