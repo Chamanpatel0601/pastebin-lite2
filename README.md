@@ -38,3 +38,85 @@ You can check out [the Next.js GitHub repository](https://github.com/vercel/next
 The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
 
 Check out our [Next.js deployment documentation](https://nextjs.org/docs/pages/building-your-application/deploying) for more details.
+
+
+--------------------------------------------------------------------------------------------------------------------------------
+
+
+# Pastebin Lite
+
+A lightweight Pastebin-like application built with **Next.js** and **Upstash Redis**.  
+Users can create text pastes with optional **time-based expiry (TTL)** and/or **view-count limits**.  
+Once any constraint is triggered, the paste becomes unavailable.
+
+---
+
+## 🚀 How to Run the App Locally
+
+### 1. Clone the repository
+```bash
+git clone <your-repo-url>
+cd pastebin-lite
+
+
+Install dependencies
+npm install
+
+
+Create .env.local
+
+Create a file named .env.local in the project root and add:
+
+NEXT_PUBLIC_BASE_URL=http://localhost:3000
+UPSTASH_REDIS_REST_URL=your_upstash_redis_url
+UPSTASH_REDIS_REST_TOKEN=your_upstash_redis_token
+
+
+Run the development server
+npm run dev
+
+
+
+Persistence Layer
+
+This project uses Upstash Redis as the persistence layer.
+Data is stored as Redis key-value pairs
+Each paste is saved under a unique key: paste:<id>
+Redis TTL is used for automatic expiry when time-based expiration is enabled
+View count is manually decremented on each access
+
+
+
+Why Redis?
+
+Fast read/write performance
+Built-in TTL support
+Serverless-friendly and works well with Vercel
+
+ Important Design Decisions
+1. Server-side Enforcement of Constraints
+TTL and view limits are enforced in API routes
+This prevents bypassing rules from the frontend
+
+2. Optional Constraints
+
+A paste may have:
+
+Only TTL
+
+Only view limit
+
+Both TTL and view limit
+
+If both are present, the paste expires as soon as either condition is met
+
+3. Stateless Frontend
+No authentication or user sessions
+
+All state is managed via Redis and API responses
+
+4. Clean UI with Minimal Dependencies
+
+No UI libraries used
+
+Simple, clean CSS for readability and performance
